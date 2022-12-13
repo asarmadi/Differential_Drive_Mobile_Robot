@@ -1,7 +1,7 @@
 # Differential Drive Mobile Robot
 ## Modelling
 In this section, the dynamic modelling of the robot is described. The matrial is derived from the [Dynamic Modelling of Differential-Drive Mobile Robots using Lagrange and Newton-Euler Methodologies: A Unified Framework](https://www.hilarispublisher.com/open-access/dynamic-modelling-of-differentialdrive-mobile-robots-using-lagrange-and-newtoneuler-methodologies-a-unified-framework-2168-9695.1000107.pdf). The robot configuration is depicted in Following figure:
-![Robot_Configuration](/Figs/robot_conf.png)
+![Robot_Configuration](/Figs/robot_config.png)
 
 ### Kinematic Model
 
