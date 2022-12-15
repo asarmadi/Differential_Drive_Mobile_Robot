@@ -17,13 +17,13 @@ class Robot:
                          [((self.R**2)*(self.m*self.L**2-self.I))/(4*self.L**2),self.I_w+((self.R**2)*(self.m*self.L**2+self.I))/(4*self.L**2)] ])
     self.B   = np.array([[1,0], [0,1]])
 
- def forward_kinematic(self, theta, d_phi):
+ def forward_kinematic(self, theta, eta):
      '''
      Calculates the forward kinematics of the robot
 
      Args:
          theta: The orientation of the robot
-         d_phi: The vector of wheels angular velocities (dot [phi_r; phi_l])
+         eta: The vector of wheels angular velocities (dot [phi_r; phi_l])
 
      Returns:
          Pose vector as dot [x_a; y_a; theta; phi_r; phi_l]
@@ -33,21 +33,47 @@ class Robot:
                        [self.R/self.L, -self.R/self.L], 
                        [2, 0],
                        [0, 2] ])
-     return R.dot(d_phi)
+     return R.dot(eta)
 
  def forward_dynamics(self, eta, theta, tau):
      '''
-     Calculates the forward kinematics of the robot
+     Calculates the forward dynamics of the robot
 
      Args:
+         eta:   The vector of wheels angular velocities (dot [phi_r; phi_l])
          theta: The orientation of the robot
-         d_phi: The vector of wheels angular velocities (dot [phi_r; phi_l])
+         tau:   The vector of motor torques ([tau_r; tau_l])
 
      Returns:
-         Pose vector as dot [x_a; y_a; theta; phi_r; phi_l]
+         Derivative of eta as ddot[phi_r; phi_l]
      '''
      V = np.array([[0, (self.R**2*self.m_c*self.d*dtheta)/(2*self.L)], 
                   [-(self.R**2*self.m_c*self.d*dtheta)/(2*self.L),0] ])
      return np.linalg.inv(self.M)@(self.B@tau - V@eta)
 
- def step(self, ):
+ def step(self, x, u):
+     '''
+     Integrates the robot for one step of self.dt
+
+     Args:
+        x:   state of the robot as a 2D array dot [phi_r; phi_l]
+        u:   control input as a 2D array [tau_r; tau_l]
+     Returns:
+        The state of the robot after integration
+     '''
+     theta = 0.5*(self.R/self.L)(x[0] - x[1])
+     return x + self.dt*self.forward_dynamics(x, theta, u)
+
+def simulate(self, x0, T):
+     '''
+     Simulates the robot for T seconds from initial state x0
+
+     Args:
+        x0:  initial state of the robot as a 2D array dot [phi_r; phi_l]
+        T:   time horizon
+     Returns:
+        The state of the robot after integration
+     '''
+
+
+
