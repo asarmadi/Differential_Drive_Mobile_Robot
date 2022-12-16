@@ -77,7 +77,7 @@ class Robot:
      '''
      horizon_length = int(T/self.dt)
      x = np.zeros([self.n_dim, horizon_length])
-     u = np.ones([self.n_dim, horizon_length])*0.01
+     u = np.ones([self.n_dim, horizon_length])*0.1
      x[:,0] = x0
      for i in range(horizon_length-1):
          x[:,i+1] = self.step(x[:,i], u[:,i])
@@ -154,7 +154,7 @@ class Robot:
             q      = self.forward_kinematic(plotx[:,i])
             x_a    = q[0]
             y_a    = q[1]
-            theta  = q[2]
+            theta  = plotx[2,i]
 
             x_wr   = x_a+self.L*np.sin(theta)
             y_wr   = y_a-self.L*np.cos(theta)
