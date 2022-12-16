@@ -2,7 +2,7 @@ import os
 import numpy as np
 from robot import Robot
 
-x0 = np.array([0.,0.,0.])
+x0 = np.array([0.,0.,0.5])
 robot = Robot()
 
 x, u = robot.simulate(x0,5)

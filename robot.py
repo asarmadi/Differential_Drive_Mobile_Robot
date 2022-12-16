@@ -119,7 +119,7 @@ class Robot:
         None -> It saves the generated motion in the save_dir directory
      '''
 
-     min_dt = 0.1
+     min_dt = 0.01
      if(self.dt < min_dt):
          steps = int(min_dt/self.dt)
          use_dt = int(min_dt * 1000)
