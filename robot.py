@@ -4,24 +4,25 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 class Robot:
- def __init__(self):
-    self.m_c =  16            # mass of the robot without wheels
-    self.I_c =  0.0537        # moment of Inertia of the robot without wheels moment of Inertia
-    self.m_w =  0.25          # mass of the wheel
-    self.I_w =  0.0011        # moment of inertia of the wheel about the wheel axis
-    self.I_m =  0.0023        # moment of inertia of the wheel about the wheel diameter
-    self.d   =  0.05          # distance from center of wheels to the CoM
-    self.L   =  0.24          # distance from center of wheels to a wheel
-    self.R   =  0.095         # wheels radius
-    self.robot_height =  0.23 # half of height of the robot
-    self.robot_width  =  0.23 # half of width  of the robot
-    self.dt  = 0.01           # sampling time
-    self.n_dim= 3             # number of state dimensions
-    self.m   = self.m_c+2*self.m_w
-    self.I   = self.I_c+self.m_c*(self.d**2)+2*self.m_w*(self.L**2)+2*self.I_m
-    self.M   = np.array([[self.I_w+((self.R**2)*(self.m*self.L**2+self.I))/(4*self.L**2),((self.R**2)*(self.m*self.L**2-self.I))/(4*self.L**2)],
-                         [((self.R**2)*(self.m*self.L**2-self.I))/(4*self.L**2),self.I_w+((self.R**2)*(self.m*self.L**2+self.I))/(4*self.L**2)] ])
-    self.B   = np.array([[1,0], [0,1]])
+ def __init__(self, controller):
+    self.m_c          =  16            # mass of the robot without wheels
+    self.I_c          =  0.0537        # moment of Inertia of the robot without wheels moment of Inertia
+    self.m_w          =  0.25          # mass of the wheel
+    self.I_w          =  0.0011        # moment of inertia of the wheel about the wheel axis
+    self.I_m          =  0.0023        # moment of inertia of the wheel about the wheel diameter
+    self.d            =  0.05          # distance from center of wheels to the CoM
+    self.L            =  0.24          # distance from center of wheels to a wheel
+    self.R            =  0.095         # wheels radius
+    self.robot_height =  0.23          # half of height of the robot
+    self.robot_width  =  0.23          # half of width  of the robot
+    self.dt           =  0.01           # sampling time
+    self.n_dim        =  3              # number of state dimensions
+    self.m            =  self.m_c+2*self.m_w
+    self.I            =  self.I_c+self.m_c*(self.d**2)+2*self.m_w*(self.L**2)+2*self.I_m
+    self.M            =  np.array([[self.I_w+((self.R**2)*(self.m*self.L**2+self.I))/(4*self.L**2),((self.R**2)*(self.m*self.L**2-self.I))/(4*self.L**2)],
+                                  [((self.R**2)*(self.m*self.L**2-self.I))/(4*self.L**2),self.I_w+((self.R**2)*(self.m*self.L**2+self.I))/(4*self.L**2)] ])
+    self.B            =  np.array([[1,0], [0,1]])
+    self.controller   =  controller
 
  def forward_kinematic(self, x):
      '''
@@ -77,9 +78,10 @@ class Robot:
      '''
      horizon_length = int(T/self.dt)
      x = np.zeros([self.n_dim, horizon_length])
-     u = np.ones([self.n_dim, horizon_length])*0.1
+     u = np.zeros([2, horizon_length])
      x[:,0] = x0
      for i in range(horizon_length-1):
+         u[:, i]  = self.controller.get_action(x[:,i])
          x[:,i+1] = self.step(x[:,i], u[:,i])
      return x, u
 
@@ -90,6 +92,7 @@ class Robot:
 
      Args:
         x:   state of the robot as a 2D array dot [phi_r; phi_l]
+        u:   control input as a 2D array [tau_r; tau_l]
         save_dir:   the directory to be used for saving the animation
      Returns:
         None, it saves the generated plots in save_dir directory
@@ -119,7 +122,7 @@ class Robot:
         None -> It saves the generated motion in the save_dir directory
      '''
 
-     min_dt = 0.01
+     min_dt = 0.1
      if(self.dt < min_dt):
          steps = int(min_dt/self.dt)
          use_dt = int(min_dt * 1000)
