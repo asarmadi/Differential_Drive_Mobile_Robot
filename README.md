@@ -4,3 +4,8 @@ A detailed summary of the modelling of the robot is reported in the [repot file]
 
 ## Simulation
 The parameters for the simulation are derived form the [Dynamics modeling and sliding mode control of tractor-trailer wheeled mobile robots subject to wheels slip](https://www.sciencedirect.com/science/article/pii/S0094114X18319062)
+
+## Control
+The follwing controllers are implemented:
+
+[-] Carrot-chasing
