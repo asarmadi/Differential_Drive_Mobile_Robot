@@ -1,5 +1,5 @@
 import numpy as np
-from controller import Controller
+from controller.controller import Controller
 
 class carrotChase(Controller):
  def __init__(self, w1, w2):

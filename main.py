@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from robot import Robot
-from carrot_chase import carrotChase
+from controller.carrot_chase import carrotChase
 
 x0 = np.array([0.,0.,0.5])
 point1 = np.array([-1.,1.])
