@@ -52,7 +52,7 @@ class Robot:
      q    = np.zeros([3,])
      q[0] = (self.R**2/(self.m*self.R**2+2*self.I_w))*(self.m_c*self.d*x[1]**2+(1/self.R)*(u[0]+u[1]))
      q[1] = (self.R**2/(self.I*self.R**2+2*self.I_w*self.L**2))*(-self.m_c*self.d*x[1]*x[0]+(self.L/self.R)*(u[0]-u[1]))
-     q[2] = q[1]
+     q[2] = x[1]
      return q
 
  def step(self, x, u):
@@ -112,8 +112,12 @@ class Robot:
      plt.ylabel('Phi')
      plt.savefig(save_dir+'phi.png')
 
+     step = 10
      plt.figure(2)
-     plt.quiver(path[0,:], path[1,:], np.cos(path[2,:]), np.sin(path[2,:]), color='g')
+     if path.shape[0] == 3:
+        plt.quiver(path[0,::step], path[1,::step], np.cos(path[2,::step]), np.sin(path[2,::step]), color='g')
+     else:
+        plt.plot(path[0,:], path[1,:], color='g')
      plt.xlabel('X')
      plt.ylabel('Y')
      plt.savefig(save_dir+'path.png')

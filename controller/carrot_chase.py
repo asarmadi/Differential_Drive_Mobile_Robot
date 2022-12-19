@@ -4,10 +4,10 @@ from controller.controller import Controller
 class carrotChase(Controller):
  def __init__(self, w1, w2):
      super().__init__()
-     self.delta   = 0.1        # path parameter
+     self.delta   = 0.5        # path parameter
      self.w_i     = w1         # way point i
      self.w_i_1   = w2         # way point i+1
-     self.k       = 0.1          # control gain
+     self.k       = 0.01          # control gain
      self.carrot  = np.array([0.,0.])
  def get_action(self, x):
      '''
