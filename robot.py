@@ -1,10 +1,11 @@
 import matplotlib
 import numpy as np
+from tqdm import tqdm
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 class Robot:
- def __init__(self, controller):
+ def __init__(self, controller, dt):
     self.m_c          =  16            # mass of the robot without wheels
     self.I_c          =  0.0537        # moment of Inertia of the robot without wheels moment of Inertia
     self.m_w          =  0.25          # mass of the wheel
@@ -15,7 +16,7 @@ class Robot:
     self.R            =  0.095         # wheels radius
     self.robot_height =  0.23          # half of height of the robot
     self.robot_width  =  0.23          # half of width  of the robot
-    self.dt           =  0.01           # sampling time
+    self.dt           =  dt            # sampling time
     self.n_dim        =  3              # number of state dimensions
     self.m            =  self.m_c+2*self.m_w
     self.I            =  self.I_c+self.m_c*(self.d**2)+2*self.m_w*(self.L**2)+2*self.I_m
@@ -80,13 +81,13 @@ class Robot:
      x = np.zeros([self.n_dim, horizon_length])
      u = np.zeros([2, horizon_length])
      x[:,0] = x0
-     for i in range(horizon_length-1):
+     for i in tqdm(range(horizon_length-1)):
          u[:, i]  = self.controller.get_action(x[:,i])
          x[:,i+1] = self.step(x[:,i], u[:,i])
      return x, u
 
 
- def plot(self, x, u, save_dir):
+ def plot(self, x, u, path, save_dir):
      '''
      This function plots the robot state and action 
 
@@ -111,6 +112,12 @@ class Robot:
      plt.ylabel('Phi')
      plt.savefig(save_dir+'phi.png')
 
+     plt.figure(2)
+     plt.quiver(path[0,:], path[1,:], np.cos(path[2,:]), np.sin(path[2,:]), color='g')
+     plt.xlabel('X')
+     plt.ylabel('Y')
+     plt.savefig(save_dir+'path.png')
+
  def animate_motion(self, x, save_dir):
      '''
      Generates an animation of the robot states
@@ -122,7 +129,7 @@ class Robot:
         None -> It saves the generated motion in the save_dir directory
      '''
 
-     min_dt = 0.1
+     min_dt = 0.01
      if(self.dt < min_dt):
          steps = int(min_dt/self.dt)
          use_dt = int(min_dt * 1000)
@@ -132,7 +139,7 @@ class Robot:
      plotx = x[:,::steps]
 
      fig = matplotlib.figure.Figure(figsize=[6,6])
-     ax = fig.add_subplot(111, autoscale_on=False, xlim=[-1.3,1.3], ylim=[-1.3,1.3])
+     ax = fig.add_subplot(111, autoscale_on=False, xlim=[-0.3,2.3], ylim=[-0.3,2.3])
      ax.grid()
 
      list_of_lines = []
