@@ -5,29 +5,29 @@ from controller.controller import Controller
 class MPC(Controller):
  def __init__(self, global_path, robot_dynamics):
      super().__init__()
-     self.horizon_len = 20                          # MPC horizon that is less than full path horizon
+     self.horizon_len = 50                          # MPC horizon that is less than full path horizon
      self.global_path = global_path                  # the reference trajectory to be followed
      self.opti        = None                         # the optimizer
      self.variables   = {}                           # the optimizer variables
      self.costs       = {}                           # the MPC cost
-     self.tau_b       = 1                            # maximum boundry for the wheels torque
-     self.dynamics    = robot_dynamics               # the dynamics of the robot defined via casadi
-     self.Q           = np.diag([100.0, 100.0, 1.0]) # MPC state cost coefficient matrix
-     self.R           = np.diag([0.0, 0.0])          # MPC control cost coefficient matrix
+     self.tau_b       = 2                                        # maximum boundry for the wheels torque
+     self.dynamics    = robot_dynamics                           # the dynamics of the robot defined via casadi
+     self.Q           = np.diag([100.0, 100.0, 100.0, 0.0, 0.0]) # MPC state cost coefficient matrix
+     self.R           = np.diag([0.0, 0.0])                      # MPC control cost coefficient matrix
 
  def setup(self, x0, ref_path):
   '''
   This function sets up the optimization problem via casadi library
 
   Args:
-   x0:       current pose of the robot. It's an array of size 3,
-   ref_path: reference path as an array of size 3*horizon_len
+   x0:       current pose of the robot. It's an array of size 5,
+   ref_path: reference path as an array of size 5*horizon_len
 
   Returns:
    None
   '''
   self.opti = ca.Opti()
-  self.variables["x"] = self.opti.variable(3, self.horizon_len + 1)
+  self.variables["x"] = self.opti.variable(5, self.horizon_len + 1)
   self.variables["u"] = self.opti.variable(2, self.horizon_len)
   self.opti.subject_to(self.variables["x"][:,0] == x0)
   self.costs["reference_trajectory_tracking"] = 0
@@ -59,6 +59,9 @@ class MPC(Controller):
    the control action as a 2D array ([tau_r;tau_l])
   '''
   local_path = self.gen_local_path(x0)
+  if local_path == []:
+     return np.array([0., 0.])
+
   self.setup(x0, local_path)
   cost = 0
   for cost_name in self.costs:
@@ -78,10 +81,12 @@ class MPC(Controller):
    x: current pose of the robot
 
   Returns:
-   An array of size 3*horizon_len
+   An array of size 5*horizon_len
   '''
   XT = np.tile(x,(self.global_path.shape[1],1)).T
   diff = np.linalg.norm(self.global_path - XT,axis=0)
   idx  = np.argmin(diff)
-  return self.global_path[:,idx:idx+self.horizon_len]
+  if idx > (self.global_path.shape[1] - self.horizon_len): # we check whether the robot reached the goal
+     return []
+  return self.global_path[:,idx:idx+self.horizon_len+1]
 

@@ -4,7 +4,7 @@ from controller.controller import Controller
 class carrotChase(Controller):
  def __init__(self, w1, w2):
      super().__init__()
-     self.delta   = 0.5        # path parameter
+     self.delta   = 0.1        # path parameter
      self.w_i     = w1         # way point i
      self.w_i_1   = w2         # way point i+1
      self.k       = 0.01          # control gain
@@ -14,7 +14,7 @@ class carrotChase(Controller):
      This function generates the proper control actions
 
      Args:
-        x: pose of the robot
+        x: state of the robot as a 5D array ([x; y; theta; v; omega])
 
      Returns:
         control action as 2D array ([tau_r;tau_l])

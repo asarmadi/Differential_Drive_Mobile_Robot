@@ -17,7 +17,7 @@ class Robot:
     self.robot_height =  0.23          # half of height of the robot
     self.robot_width  =  0.23          # half of width  of the robot
     self.dt           =  dt            # sampling time
-    self.n_dim        =  3              # number of state dimensions
+    self.n_dim        =  5             # number of state dimensions
     self.m            =  self.m_c+2*self.m_w
     self.I            =  self.I_c+self.m_c*(self.d**2)+2*self.m_w*(self.L**2)+2*self.I_m
     self.M            =  np.array([[self.I_w+((self.R**2)*(self.m*self.L**2+self.I))/(4*self.L**2),((self.R**2)*(self.m*self.L**2-self.I))/(4*self.L**2)],
@@ -25,34 +25,23 @@ class Robot:
     self.B            =  np.array([[1,0], [0,1]])
     self.controller   =  controller
 
- def forward_kinematic(self, x):
-     '''
-     Calculates the forward kinematics of the robot
-
-     Args:
-         x: The 3d state vector ([v; omega; theta])
-
-     Returns:
-         Pose vector as dot [x; y; theta]
-     '''
-     R = np.array([ [np.cos(x[2]),0,0], [np.sin(x[2]),0,0], [0,1,0]])
-     return R@x
-
  def forward_dynamics(self, x, u):
      '''
      Calculates the forward dynamics of the robot
 
      Args:
-         x:   The vector of the robot linear and angular velocities ([v; omega; theta])
+         x:   The vector of the robot linear and angular velocities ([x; y; theta; v; omega])
          u:   The vector of motor torques ([tau_r; tau_l])
 
      Returns:
-         Derivative of eta as ddot[phi_r; phi_l]
+         A 5D array of the updated state
      '''
-     q    = np.zeros([3,])
-     q[0] = (self.R**2/(self.m*self.R**2+2*self.I_w))*(self.m_c*self.d*x[1]**2+(1/self.R)*(u[0]+u[1]))
-     q[1] = (self.R**2/(self.I*self.R**2+2*self.I_w*self.L**2))*(-self.m_c*self.d*x[1]*x[0]+(self.L/self.R)*(u[0]-u[1]))
-     q[2] = x[1]
+     q    = np.zeros([self.n_dim,])
+     q[0] = x[3]*np.cos(x[2])
+     q[1] = x[3]*np.sin(x[2])
+     q[2] = x[4]
+     q[3] = (self.R**2/(self.m*self.R**2+2*self.I_w))*(self.m_c*self.d*x[4]**2+(1/self.R)*(u[0]+u[1]))
+     q[4] = (self.R**2/(self.I*self.R**2+2*self.I_w*self.L**2))*(-self.m_c*self.d*x[4]*x[3]+(self.L/self.R)*(u[0]-u[1]))
      return q
 
  def step(self, x, u):
@@ -60,7 +49,7 @@ class Robot:
      Integrates the robot for one step of self.dt
 
      Args:
-        x:   state of the robot as a 2D array dot [phi_r; phi_l]
+        x:   state of the robot as a 5D array [x; y; theta; v; omega]
         u:   control input as a 2D array [tau_r; tau_l]
      Returns:
         The state of the robot after integration
@@ -72,7 +61,7 @@ class Robot:
      Simulates the robot for T seconds from initial state x0
 
      Args:
-        x0:  initial state of the robot as a 2D array dot [phi_r; phi_l]
+        x0:  initial state of the robot as a 5D array ([x; y; theta; v; omega])
         T:   time horizon
      Returns:
         x and u containing the time evolution of the states and control
@@ -82,8 +71,8 @@ class Robot:
      u = np.zeros([2, horizon_length])
      x[:,0] = x0
      for i in tqdm(range(horizon_length-1)):
-         u[:, i]  = self.controller.get_action(x[:,i])
-         x[:,i+1] = self.step(x[:,i], u[:,i])
+         u[:, i]    = self.controller.get_action(x[:,i])
+         x[:,i+1]   = self.step(x[:,i], u[:,i])
      return x, u
 
 
@@ -92,32 +81,30 @@ class Robot:
      This function plots the robot state and action 
 
      Args:
-        x:   state of the robot as a 2D array dot [phi_r; phi_l]
+        x:   state of the robot as a 5D array dot ([x; y; theta; v; omega])
         u:   control input as a 2D array [tau_r; tau_l]
         save_dir:   the directory to be used for saving the animation
      Returns:
         None, it saves the generated plots in save_dir directory
      '''
-     q = np.empty([self.n_dim, x.shape[1]])
-     for i in range(x.shape[1]):
-         q[:,i] =  self.forward_kinematic(x[:,i])
      plt.figure(0)
-     plt.plot(q[0,:],q[1,:])
+     plt.plot(x[0,:]   , x[1,:],    'b', label='Robot')
+     plt.plot(path[0,:], path[1,:], 'r', label='Ref')
      plt.xlabel('X')
      plt.ylabel('Y')
      plt.savefig(save_dir+'x_y.png')
 
      plt.figure(1)
-     plt.plot(q[2,:])
+     plt.plot(x[2,:])
      plt.ylabel('Phi')
      plt.savefig(save_dir+'phi.png')
 
      step = 10
      plt.figure(2)
-     if path.shape[0] == 3:
-        plt.quiver(path[0,::step], path[1,::step], np.cos(path[2,::step]), np.sin(path[2,::step]), color='g')
-     else:
-        plt.plot(path[0,:], path[1,:], color='g')
+#     if path.shape[0] == 3:
+     plt.quiver(path[0,::step], path[1,::step], np.cos(path[2,::step]), np.sin(path[2,::step]), color='g')
+ #    else:
+  #      plt.plot(path[0,:], path[1,:], color='g')
      plt.xlabel('X')
      plt.ylabel('Y')
      plt.savefig(save_dir+'path.png')
@@ -165,9 +152,8 @@ class Robot:
             for l in list_of_lines: #reset all lines
                 l.set_data([],[])
 
-            q      = self.forward_kinematic(plotx[:,i])
-            x_a    = q[0]
-            y_a    = q[1]
+            x_a    = plotx[0,i]
+            y_a    = plotx[1,i]
             theta  = plotx[2,i]
 
             x_wr   = x_a+self.L*np.sin(theta)
