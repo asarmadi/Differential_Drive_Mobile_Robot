@@ -27,7 +27,7 @@ class MPC(Controller):
    None
   '''
   self.opti = ca.Opti()
-  self.variables["x"] = self.opti.variable(5, self.horizon_len + 1)
+  self.variables["x"] = self.opti.variable(len(x0),  self.horizon_len + 1)
   self.variables["u"] = self.opti.variable(2, self.horizon_len)
   self.opti.subject_to(self.variables["x"][:,0] == x0)
   self.costs["reference_trajectory_tracking"] = 0

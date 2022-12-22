@@ -1,11 +1,14 @@
 import matplotlib
 import numpy as np
+import casadi as ca
 from tqdm import tqdm
+from models.robot import Robot
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-class Robot:
- def __init__(self, controller, dt):
+class DDMR(Robot):
+ def __init__(self, dt):
+    super().__init__(dt)
     self.m_c          =  16            # mass of the robot without wheels
     self.I_c          =  0.0537        # moment of Inertia of the robot without wheels moment of Inertia
     self.m_w          =  0.25          # mass of the wheel
@@ -16,14 +19,35 @@ class Robot:
     self.R            =  0.095         # wheels radius
     self.robot_height =  0.23          # half of height of the robot
     self.robot_width  =  0.23          # half of width  of the robot
-    self.dt           =  dt            # sampling time
     self.n_dim        =  5             # number of state dimensions
     self.m            =  self.m_c+2*self.m_w
     self.I            =  self.I_c+self.m_c*(self.d**2)+2*self.m_w*(self.L**2)+2*self.I_m
     self.M            =  np.array([[self.I_w+((self.R**2)*(self.m*self.L**2+self.I))/(4*self.L**2),((self.R**2)*(self.m*self.L**2-self.I))/(4*self.L**2)],
                                   [((self.R**2)*(self.m*self.L**2-self.I))/(4*self.L**2),self.I_w+((self.R**2)*(self.m*self.L**2+self.I))/(4*self.L**2)] ])
     self.B            =  np.array([[1,0], [0,1]])
-    self.controller   =  controller
+
+ def forward_dynamics_opt(self, timestep):
+  '''
+  This function implements the forward dynamics using Casadi
+
+  Args:
+    timestep: the timestep to be used for the calculations
+
+  Returns:
+    A Casadi function
+  '''
+  x_symbol = ca.SX.sym("x", self.n_dim)
+  u_symbol = ca.SX.sym("u", 2)
+
+  x_symbol_next     = x_symbol[0] + x_symbol[3]*np.cos(x_symbol[2]) * timestep
+  y_symbol_next     = x_symbol[1] + x_symbol[3]*np.sin(x_symbol[2]) * timestep
+  theta_symbol_next = x_symbol[2] + x_symbol[4] * timestep
+  v_symbol_next     = x_symbol[3] + ((self.R**2/(self.m*self.R**2+2*self.I_w))*(self.m_c*self.d*x_symbol[4]**2+(1/self.R)*(u_symbol[0]+u_symbol[1]))) * timestep
+  omega_symbol_next = x_symbol[4] + ((self.R**2/(self.I*self.R**2+2*self.I_w*self.L**2))*(-self.m_c*self.d*x_symbol[4]*x_symbol[3]+(self.L/self.R)*(u_symbol[0]-u_symbol[1]))) * timestep
+
+  state_symbol_next = ca.vertcat(x_symbol_next, y_symbol_next, theta_symbol_next, v_symbol_next, omega_symbol_next)
+  return ca.Function("differential_wheeled_dynamics", [x_symbol, u_symbol], [state_symbol_next])
+
 
  def forward_dynamics(self, x, u):
      '''
@@ -44,39 +68,7 @@ class Robot:
      q[4] = (self.R**2/(self.I*self.R**2+2*self.I_w*self.L**2))*(-self.m_c*self.d*x[4]*x[3]+(self.L/self.R)*(u[0]-u[1]))
      return q
 
- def step(self, x, u):
-     '''
-     Integrates the robot for one step of self.dt
-
-     Args:
-        x:   state of the robot as a 5D array [x; y; theta; v; omega]
-        u:   control input as a 2D array [tau_r; tau_l]
-     Returns:
-        The state of the robot after integration
-     '''
-     return x + self.dt*self.forward_dynamics(x, u)
-
- def simulate(self, x0, T):
-     '''
-     Simulates the robot for T seconds from initial state x0
-
-     Args:
-        x0:  initial state of the robot as a 5D array ([x; y; theta; v; omega])
-        T:   time horizon
-     Returns:
-        x and u containing the time evolution of the states and control
-     '''
-     horizon_length = int(T/self.dt)
-     x = np.zeros([self.n_dim, horizon_length])
-     u = np.zeros([2, horizon_length])
-     x[:,0] = x0
-     for i in tqdm(range(horizon_length-1)):
-         u[:, i]    = self.controller.get_action(x[:,i])
-         x[:,i+1]   = self.step(x[:,i], u[:,i])
-     return x, u
-
-
- def plot(self, x, u, path, save_dir):
+ def plot(self, x, u, c, path, save_dir):
      '''
      This function plots the robot state and action 
 
@@ -90,8 +82,10 @@ class Robot:
      plt.figure(0)
      plt.plot(x[0,:]   , x[1,:],    'b', label='Robot')
      plt.plot(path[0,:], path[1,:], 'r', label='Ref')
+     plt.plot(c[0,:], c[1,:], 'g*', label='Carrot')
      plt.xlabel('X')
      plt.ylabel('Y')
+     plt.legend()
      plt.savefig(save_dir+'x_y.png')
 
      plt.figure(1)
