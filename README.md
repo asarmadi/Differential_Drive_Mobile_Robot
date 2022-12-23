@@ -8,7 +8,8 @@ The parameters for the simulation are derived form the [Dynamics modeling and sl
 ## Control
 The follwing controllers are implemented:
 
-[-] Carrot-chasing \\
+[-] Carrot-chasing
+
 [-] MPC
 
 ## Runing the code
