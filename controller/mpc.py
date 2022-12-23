@@ -3,7 +3,7 @@ import numpy as np
 from controller.controller import Controller
 
 class MPC(Controller):
- def __init__(self, global_path, robot_dynamics):
+ def __init__(self, global_path, robot_dynamics, Q):
      super().__init__()
      self.horizon_len = 10                          # MPC horizon that is less than full path horizon
      self.global_path = global_path                  # the reference trajectory to be followed
@@ -11,9 +11,9 @@ class MPC(Controller):
      self.variables   = {}                           # the optimizer variables
      self.costs       = {}                           # the MPC cost
      self.tau_b       = 10                                        # maximum boundry for the wheels torque
-     self.dynamics    = robot_dynamics                           # the dynamics of the robot defined via casadi
-     self.Q           = np.diag([10.0, 10.0, 1.0, 0.0, 0.0]) # MPC state cost coefficient matrix
-     self.R           = np.diag([0.0, 0.0])                      # MPC control cost coefficient matrix
+     self.dynamics    = robot_dynamics                 # the dynamics of the robot defined via casadi
+     self.Q           = Q                            # MPC state cost coefficient matrix
+     self.R           = np.diag([0.0, 0.0])          # MPC control cost coefficient matrix
 
  def setup(self, x0, ref_path):
   '''

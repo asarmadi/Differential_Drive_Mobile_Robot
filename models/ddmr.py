@@ -103,7 +103,7 @@ class DDMR(Robot):
      plt.ylabel('Y')
      plt.savefig(save_dir+'path.png')
 
- def animate_motion(self, x, save_dir):
+ def animate_motion(self, x, u, save_dir):
      '''
      Generates an animation of the robot states
 

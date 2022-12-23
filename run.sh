@@ -1,5 +1,5 @@
-robot='sddmr'
-method='carrot_chasing'
+robot='quad2d'
+method='mpc'
 T=5
 dt=0.01
 

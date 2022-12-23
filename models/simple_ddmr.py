@@ -117,7 +117,8 @@ class SDDMR(Robot):
      plotx = x[:,::steps]
 
      fig = matplotlib.figure.Figure(figsize=[6,6])
-     ax = fig.add_subplot(111, autoscale_on=False, xlim=[-0.3,2.3], ylim=[-0.3,2.3])
+#     ax = fig.add_subplot(111, autoscale_on=False, xlim=[np.min(x[0,:])-0.3,np.max(x[0,:])+0.3], ylim=[np.min(x[1,:])-0.3,np.max(x[1,:])+0.3])
+     ax = fig.add_subplot(111, autoscale_on=False, xlim=[-0.3,10+0.3], ylim=[-.3, 10+0.3])
      ax.grid()
 
      list_of_lines = []

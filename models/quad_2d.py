@@ -31,14 +31,14 @@ class Quad2D(Robot):
   x_symbol = ca.SX.sym("x", self.n_dim)
   u_symbol = ca.SX.sym("u", 2)
 
-  x_symbol_next     = x_symbol[0] + x_symbol[1] * timestep
-  vx_symbol_next    = x_symbol[1] + ((-np.sin(x_symbol[4])*(u_symbol[0]+u_symbol[1])) / self.m) * timestep
-  y_symbol_next     = x_symbol[2] + x_symbol[3] * timestep
-  vy_symbol_next    = x_symbol[3] + ((np.cos(x_symbol[4])*(u_symbol[0]+u_symbol[1]) / self.m) - self.g) * timestep
-  theta_symbol_next = x_symbol[4] + x_symbol[5] * timestep
+  x_symbol_next     = x_symbol[0] + x_symbol[3] * timestep
+  y_symbol_next     = x_symbol[1] + x_symbol[4] * timestep
+  theta_symbol_next = x_symbol[2] + x_symbol[5] * timestep
+  vx_symbol_next    = x_symbol[3] + ((-np.sin(x_symbol[3])*(u_symbol[0]+u_symbol[1])) / self.m) * timestep
+  vy_symbol_next    = x_symbol[4] + ((np.cos(x_symbol[3])*(u_symbol[0]+u_symbol[1]) / self.m) - self.g) * timestep
   omega_symbol_next = x_symbol[5] + ((self.r/self.I)*(u_symbol[0]-u_symbol[1])) * timestep
 
-  state_symbol_next = ca.vertcat(x_symbol_next, vx_symbol_next, y_symbol_next, vy_symbol_next, theta_symbol_next, omega_symbol_next)
+  state_symbol_next = ca.vertcat(x_symbol_next, y_symbol_next, theta_symbol_next, vx_symbol_next, vy_symbol_next, omega_symbol_next)
   return ca.Function("differential_wheeled_dynamics", [x_symbol, u_symbol], [state_symbol_next])
 
 
@@ -47,18 +47,18 @@ class Quad2D(Robot):
      Calculates the forward dynamics of the robot
 
      Args:
-         x:   The vector of the robot linear and angular velocities ([x; vx; y; vy; theta; omega])
+         x:   The vector of the robot linear and angular velocities ([x; y; theta; vx; vy; omega])
          u:   The vector of motor torques ([u_1; u_2])
 
      Returns:
          A 6D array of the updated state
      '''
      q    = np.zeros([self.n_dim,])
-     q[0] = x[1]
-     q[1] = (-np.sin(x[4])*(u[0]+u[1])) / self.m
-     q[2] = x[3]
-     q[3] = (np.cos(x[4])*(u[0]+u[1]) / self.m) - self.g
-     q[4] = x[5]
+     q[0] = x[3]
+     q[1] = x[4]
+     q[2] = x[5]
+     q[3] = (-np.sin(x[3])*(u[0]+u[1])) / self.m
+     q[4] = (np.cos(x[3])*(u[0]+u[1]) / self.m) - self.g
      q[5] = (self.r/self.I)*(u[0]-u[1])
      return q
 
@@ -74,8 +74,8 @@ class Quad2D(Robot):
         None, it saves the generated plots in save_dir directory
      '''
      plt.figure(0)
-     plt.plot(x[0,:]   , x[2,:],    'b', label='Robot')
-     plt.plot(path[0,:], path[2,:], 'r', label='Ref')
+     plt.plot(x[0,:]   , x[1,:],    'b', label='Robot')
+     plt.plot(path[0,:], path[1,:], 'r', label='Ref')
      plt.plot(c[0,:], c[1,:], 'g*', label='Carrot')
      plt.xlabel('X')
      plt.ylabel('Y')
@@ -83,7 +83,7 @@ class Quad2D(Robot):
      plt.savefig(save_dir+'x_y.png')
 
      plt.figure(1)
-     plt.plot(x[4,:])
+     plt.plot(x[2,:])
      plt.ylabel('Phi')
      plt.savefig(save_dir+'phi.png')
 
@@ -119,33 +119,36 @@ class Quad2D(Robot):
      plotu = u[:,::steps]
 
      fig = matplotlib.figure.Figure(figsize=[6,6])
-     ax = fig.add_subplot(111, autoscale_on=False, xlim=[-0.3,2.3], ylim=[-0.3,2.3])
+     ax = fig.add_subplot(111, autoscale_on=False, xlim=[np.min(x[0,:])-0.3,np.max(x[0,:])+0.3], ylim=[np.min(x[1,:])-0.3,np.max(x[1,:])+0.3])
+#     ax = fig.add_subplot(111, autoscale_on=False, xlim=[-0.3,2.3], ylim=[-0.3,2.3])
      ax.grid()
 
      list_of_lines = []
 
-     line, = ax.plot([], [], 'o', lw=2)
+     line, = ax.plot([], [], 'k', lw=6)
      list_of_lines.append(line)
-     line, = ax.plot([], [], 'o', lw=2)
+     # the left propeller
+     line, = ax.plot([], [], 'b', lw=4)
      list_of_lines.append(line)
-     line, = ax.plot([], [], 'k-', lw=2)
+     # the right propeller
+     line, = ax.plot([], [], 'b', lw=4)
      list_of_lines.append(line)
-     line, = ax.plot([], [], 'k-', lw=2)
+     # the left thrust
+     line, = ax.plot([], [], 'r', lw=1)
      list_of_lines.append(line)
-     line, = ax.plot([], [], 'k-', lw=2)
-     list_of_lines.append(line)
-     line, = ax.plot([], [], 'k-', lw=2)
+     # the right thrust
+     line, = ax.plot([], [], 'r', lw=1)
      list_of_lines.append(line)
 
      def animate(i):
             for l in list_of_lines: #reset all lines
                 l.set_data([],[])
 
-            theta = plotx[4,i]
-            x    = plotx[0,i]
-            y    = plotx[2,i]
+            theta = plotx[2,i]
+            x     = plotx[0,i]
+            y     = plotx[1,i]
             trans = np.array([[x,x],[y,y]])
-            rot = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
+            rot   = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
 
             main_frame = np.array([[-self.l, self.l], [0,0]])
             main_frame = rot @ main_frame + trans
