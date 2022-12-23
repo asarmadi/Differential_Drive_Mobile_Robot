@@ -1,4 +1,8 @@
-# Differential Drive Mobile Robot
+# Nonlinear Robot Control
+
+## Robots
+Two robots are considered: Differential Wheeled Robot, and 2D quadrotor.
+
 ## Modelling
 A detailed summary of the modelling of the robot is reported in the [report file](https://github.com/asarmadi/Differential_Drive_Mobile_Robot/blob/main/Docs/report.pdf). The matrial of the report are mostly taken from [Dynamic Modelling of Differential-Drive Mobile Robots using Lagrange and Newton-Euler Methodologies: A Unified Framework](https://www.hilarispublisher.com/open-access/dynamic-modelling-of-differentialdrive-mobile-robots-using-lagrange-and-newtoneuler-methodologies-a-unified-framework-2168-9695.1000107.pdf)
 
@@ -8,9 +12,11 @@ The parameters for the simulation are derived form the [Dynamics modeling and sl
 ## Control
 The follwing controllers are implemented:
 
-[-] Carrot-chasing
+[-] Carrot-chasing: A geometry-based controller
 
-[-] MPC
+[-] MPC: An optimization-based controller 
+
+[-] Backstepping:
 
 ## Runing the code
 To run any of the algorithms, you can run the following command:
