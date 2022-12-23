@@ -14,7 +14,7 @@ The follwing controllers are implemented:
 ## Runing the code
 To run any of the algorithms, you can run the following command:
 
-``python main.py --T 5 --dt 0.01 --method mpc -- robot ddmr
+``python main.py --T 5 --dt 0.01 --method mpc -- robot ddmr``
 
 - `--T`       is an integer showing the duration of the motion in seconds
 - `--dt`      is the sampling time is seconds
