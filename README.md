@@ -8,5 +8,15 @@ The parameters for the simulation are derived form the [Dynamics modeling and sl
 ## Control
 The follwing controllers are implemented:
 
-[-] Carrot-chasing
+[-] Carrot-chasing \\
 [-] MPC
+
+## Runing the code
+To run any of the algorithms, you can run the following command:
+
+``python main.py --T 5 --dt 0.01 --method mpc -- robot ddmr
+
+- `--T`       is an integer showing the duration of the motion in seconds
+- `--dt`      is the sampling time is seconds
+- `--method`  can be either 'mpc' or 'carrot_chasing'
+- `--robot`   can be either 'ddmr' or 'quad2d'
