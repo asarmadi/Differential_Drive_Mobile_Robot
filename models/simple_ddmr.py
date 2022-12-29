@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 class SDDMR(Robot):
- def __init__(self, dt):
-    super().__init__(dt)
+ def __init__(self):
+    super().__init__()
     self.m          =  4            # mass of the robot without wheels
     self.I          =  2.5        # moment of Inertia of the robot without wheels moment of Inertia
     self.L          =  0.3          # mass of the wheel
@@ -60,6 +60,33 @@ class SDDMR(Robot):
      q[3] = (1/(self.m*self.r))*(u[0]+u[1])
      q[4] = (self.L/(2*self.r*self.I))*(u[0]-u[1])
      return q
+
+ def linearize(self, x_eq, u_eq):
+     '''
+     Linearizes the forward dynamics of the robot
+
+     Args:
+         x:   The state equilibrium point ([x; y; theta; vx; vy; omega])
+         u:   The input equilibrium point ([u_1; u_2])
+
+     Returns:
+         A and B matrices
+     '''
+     A  = np.zeros([self.n_dim, self.n_dim])
+     B  = np.zeros([self.n_dim, 2])
+
+     A[0,2] = -x_eq[3]*np.sin(x_eq[2])
+     A[0,3] = np.cos(x_eq[2])
+     A[1,2] = x_eq[3]*np.cos(x_eq[2])
+     A[1,3] = np.sin(x_eq[2])
+     A[2,4] = 1
+
+     B[3,0] = 1/(self.m*self.r)
+     B[3,1] = 1/(self.m*self.r)
+     B[4,0] = self.L/(2*self.r*self.I)
+     B[4,1] = -self.L/(2*self.r*self.I)
+     return A, B
+
 
  def plot(self, x, u, c, path, save_dir):
      '''

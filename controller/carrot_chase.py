@@ -7,7 +7,7 @@ class carrotChase(Controller):
      self.delta   = 1                    # path parameter
      self.w_i     = w1                     # way point i
      self.w_i_1   = w2                     # way point i+1
-     self.k1      = 1                      # angle error control gain
+     self.k1      = 10                      # angle error control gain
      self.k2      = 0                      # distance error control gain
      self.carrot  = np.array([0.,0.])      # position of the carrot
      self.action  = np.array([0.01,0.01])  # cumulative action signal
@@ -26,7 +26,9 @@ class carrotChase(Controller):
      theta_u     =  np.arctan2(x[1]-self.w_i[1],x[0]-self.w_i[0])
      beta        =  theta - theta_u
      R_u         =  np.sqrt((x[0]-self.w_i[0])**2+(x[1]-self.w_i[1])**2)
+
 #     R           =  R_u*np.cos(beta)
+
      R           =  np.sqrt(R_u**2 - (R_u*np.sin(beta))**2 )
      S           =  np.array([(R+self.delta)*np.cos(theta),(R+self.delta)*np.sin(theta)])
      psi_d       =  np.arctan2(S[1] + x[1],S[0] + x[0])

@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 class DDMR(Robot):
- def __init__(self, dt):
-    super().__init__(dt)
+ def __init__(self):
+    super().__init__()
     self.m_c          =  16            # mass of the robot without wheels
     self.I_c          =  0.0537        # moment of Inertia of the robot without wheels moment of Inertia
     self.m_w          =  0.25          # mass of the wheel

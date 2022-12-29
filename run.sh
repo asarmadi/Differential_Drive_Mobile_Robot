@@ -1,5 +1,5 @@
-robot='quad2d'
-method='mpc'
+robot='sddmr'
+method='lqr'
 T=5
 dt=0.01
 

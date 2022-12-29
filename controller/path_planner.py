@@ -13,7 +13,7 @@ def straightLine(p1, p2, horizon):
  '''
  path      = np.zeros([p1.shape[0],horizon])
  ds        = (p2-p1)/horizon
- theta     = np.arctan2(p2[1] - p1[1], p2[0] - p1[0])
+ theta     = -np.arctan2(p2[1] - p1[1], p2[0] - p1[0])
  path[:,0] = p1
  path[3,0] = theta
  for i in range(1,horizon):

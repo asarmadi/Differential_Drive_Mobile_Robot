@@ -2,8 +2,13 @@ import numpy as np
 from tqdm import tqdm
 
 class Robot:
- def __init__(self, dt):
-    self.dt           =  dt            # sampling time
+ def __init__(self):
+     pass
+ def set_method(self, method):
+     self.method = method    # a string showing the name of the controller
+
+ def set_dt(self, dt):
+     self.dt = dt                # sampling time
 
  def forward_dynamics(self, x, u):
      '''
@@ -46,8 +51,14 @@ class Robot:
      c = np.zeros([2, horizon_length])
      x[:,0] = x0
      for i in tqdm(range(horizon_length-1)):
-         u[:, i]    = self.controller.get_action(x[:,i])
-#         c[:, i]    = self.controller.get_carrot()
+         if self.method == 'carrot_chasing':
+            c[:, i]    = self.controller.get_carrot()
+         if self.method == 'lqr':
+            u[:, i]    = self.controller.get_action(x[:,i], i)
+         else:
+            u[:, i]    = self.controller.get_action(x[:,i])
+         print(u[:,i])
+         input('enter')
          x[:,i+1]   = self.step(x[:,i], u[:,i])
      return x, u, c
 

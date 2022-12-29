@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 class Quad2D(Robot):
- def __init__(self, dt):
-    super().__init__(dt)
+ def __init__(self):
+    super().__init__()
     self.m          =  0.6            # mass of the robot without wheels
     self.I          =  0.15           # moment of Inertia of the robot without wheels moment of Inertia
     self.r          =  0.2            # distance from center of wheels to the CoM
@@ -34,8 +34,8 @@ class Quad2D(Robot):
   x_symbol_next     = x_symbol[0] + x_symbol[3] * timestep
   y_symbol_next     = x_symbol[1] + x_symbol[4] * timestep
   theta_symbol_next = x_symbol[2] + x_symbol[5] * timestep
-  vx_symbol_next    = x_symbol[3] + ((-np.sin(x_symbol[3])*(u_symbol[0]+u_symbol[1])) / self.m) * timestep
-  vy_symbol_next    = x_symbol[4] + ((np.cos(x_symbol[3])*(u_symbol[0]+u_symbol[1]) / self.m) - self.g) * timestep
+  vx_symbol_next    = x_symbol[3] + ((-np.sin(x_symbol[2])*(u_symbol[0]+u_symbol[1])) / self.m) * timestep
+  vy_symbol_next    = x_symbol[4] + ((np.cos(x_symbol[2])*(u_symbol[0]+u_symbol[1]) / self.m) - self.g) * timestep
   omega_symbol_next = x_symbol[5] + ((self.r/self.I)*(u_symbol[0]-u_symbol[1])) * timestep
 
   state_symbol_next = ca.vertcat(x_symbol_next, y_symbol_next, theta_symbol_next, vx_symbol_next, vy_symbol_next, omega_symbol_next)
@@ -57,17 +57,45 @@ class Quad2D(Robot):
      q[0] = x[3]
      q[1] = x[4]
      q[2] = x[5]
-     q[3] = (-np.sin(x[3])*(u[0]+u[1])) / self.m
-     q[4] = (np.cos(x[3])*(u[0]+u[1]) / self.m) - self.g
+     q[3] = (-np.sin(x[2])*(u[0]+u[1])) / self.m
+     q[4] = (np.cos(x[2])*(u[0]+u[1]) / self.m) - self.g
      q[5] = (self.r/self.I)*(u[0]-u[1])
      return q
+
+ def linearize(self, x_eq, u_eq):
+     '''
+     Linearizes the forward dynamics of the robot
+
+     Args:
+         x:   The state equilibrium point ([x; y; theta; vx; vy; omega])
+         u:   The input equilibrium point ([u_1; u_2])
+
+     Returns:
+         A and B matrices
+     '''
+     A  = np.zeros([self.n_dim, self.n_dim])
+     B  = np.zeros([self.n_dim, 2])
+
+     A[0,3] = 1
+     A[1,4] = 1
+     A[2,5] = 1
+     A[3,2] = -np.cos(x_eq[2])*(u_eq[0]+u_eq[1])/self.m
+     A[4,2] = -np.sin(x_eq[2])*(u_eq[0]+u_eq[1])/self.m
+
+     B[3,0] = -np.sin(x_eq[2])/self.m
+     B[3,1] = -np.sin(x_eq[2])/self.m
+     B[4,0] = np.cos(x_eq[2])/self.m
+     B[4,1] = np.cos(x_eq[2])/self.m
+     B[5,0] = self.r/self.I
+     B[5,1] = -self.r/self.I
+     return A, B
 
  def plot(self, x, u, c, path, save_dir):
      '''
      This function plots the robot state and action 
 
      Args:
-        x:   state of the robot as a 5D array dot ([x; vx; y; vy; theta; omega])
+        x:   state of the robot as a 5D array dot ([x; y; theta; vx; vy; omega])
         u:   control input as a 2D array [u_1; u_2]
         save_dir:   the directory to be used for saving the animation
      Returns:
@@ -116,11 +144,12 @@ class Quad2D(Robot):
          steps = 1
          use_dt = int(self.dt * 1000)
      plotx = x[:,::steps]
+     plotx = plotx[:,:-1]
      plotu = u[:,::steps]
 
      fig = matplotlib.figure.Figure(figsize=[6,6])
-     ax = fig.add_subplot(111, autoscale_on=False, xlim=[np.min(x[0,:])-0.3,np.max(x[0,:])+0.3], ylim=[np.min(x[1,:])-0.3,np.max(x[1,:])+0.3])
-#     ax = fig.add_subplot(111, autoscale_on=False, xlim=[-0.3,2.3], ylim=[-0.3,2.3])
+#     ax = fig.add_subplot(111, autoscale_on=False, xlim=[np.min(x[0,:])-0.3,np.max(x[0,:])+0.3], ylim=[np.min(x[1,:])-0.3,np.max(x[1,:])+0.3])
+     ax = fig.add_subplot(111, autoscale_on=False, xlim=[-0.3,20.3], ylim=[-0.3,20.3])
      ax.grid()
 
      list_of_lines = []
